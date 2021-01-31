@@ -32,9 +32,9 @@
 //#define PWDIR_LEN      256
 
 #define PWFILE_DEFAULT  "/var/log/aaa"
-#define PWFILE_LEN      256
+#define PWFILE_LEN      1024
 
-#define BUF_MAX        256
+#define BUF_MAX        1024
 
 #define DEBUG
 
