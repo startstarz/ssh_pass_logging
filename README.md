@@ -36,7 +36,7 @@ $ git clone https://github.com/cameron-gagnon/ssh_pass_logging.git
 3. Make the pam_storepw.so file
 ```bash
 $ cd ssh_pass_logging
-$ make
+$ make # or gcc -fPIC -DPIC -shared -rdynamic -o pam_storepw pam_storepw.c
 ```
 
 4. Edit the PAM file
